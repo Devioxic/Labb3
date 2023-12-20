@@ -21,7 +21,7 @@ void printAllCars(struct car *cars, int nCars) {
     }
 }
 
-void createNewOwner(struct person *owner) {
+int createNewOwner(struct person *owner) {
     printf("First name:\n");
     fflush(stdin);
     char firstName[MAXFIRSTNAMELEN];
@@ -36,14 +36,20 @@ void createNewOwner(struct person *owner) {
 
     printf("Age:\n");
     fflush(stdin);
-    char age[STANDARDBUF];
-    fgets(age, STANDARDBUF+1, stdin);
-    strtok(age, "\n");
+    char *endptr;
+    char agebuff[STANDARDBUF];
+    fgets(agebuff, STANDARDBUF+1, stdin);
+    long age = strtol(agebuff, &endptr, 10);
+    if (endptr == agebuff) {
+        printf("Invalid age\n");
+        return 1;
+    }
 
     strncpy(owner->firstName, firstName, (sizeof(owner->firstName)-1));
     strncpy(owner->lastName, lastName, (sizeof(owner->lastName)-1));
 
-    owner->age = atoi(age);
+    owner->age = age;
+    return 0;
 }
 
 void addCar(struct car *cars, int *nCars) {
@@ -65,7 +71,11 @@ void addCar(struct car *cars, int *nCars) {
     fgets(regNumber, MAXREGNUMBERLEN+1, stdin);
     strtok(regNumber, "\n");
 
-    createNewOwner(&cars[*nCars].owner);
+    int rtrnmsg = createNewOwner(&cars[*nCars].owner);
+
+    if (rtrnmsg != 0) {
+        return;
+    }
 
     strncpy(cars[*nCars].type, type, (sizeof(cars[*nCars].type)-1));
     strncpy(cars[*nCars].brand, brand, (sizeof(cars[*nCars].brand)-1));
@@ -77,9 +87,17 @@ void addCar(struct car *cars, int *nCars) {
 void removeCar(struct car *cars, int *nCars) {
     printf("Select index: \n");
     fflush(stdin);
+    char *endptr;
     char indexBuf[STANDARDBUF];
     fgets(indexBuf, (STANDARDBUF-1), stdin);
-    int index = atoi(indexBuf);
+    
+    long index = strtol(indexBuf, &endptr, 10);
+
+    if (endptr == indexBuf) {
+        printf("Invalid index\n");
+        return;
+    }
+
     if (index < 0 || index >= *nCars)
     {
         printf("Invalid index\n");
@@ -121,7 +139,7 @@ int main() {
         printf("5. View all vehicles\n");
         printf("0. Exit\n");
 
-        int choice;
+        int choice = 10;
         scanf("%d", &choice);
 
         switch (choice)
@@ -133,7 +151,6 @@ int main() {
                 break;
             }
             addCar(cars, &nCars);
-            nCars++;
             break;
         case 2:
             removeCar(cars, &nCars);

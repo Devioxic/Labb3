@@ -25,7 +25,6 @@ int readRegister(struct car cars[]) {
     }
 
     while (fscanf(file, "%[^,],%[^,],%[^,], %[^,],%[^,],%d\n", cars[nCars].type, cars[nCars].brand, cars[nCars].regNumber, cars[nCars].owner.firstName, cars[nCars].owner.lastName, &cars[nCars].owner.age) != EOF) {
-        printf("%s,%s,%s, %s,%s,%d\n", cars[nCars].type, cars[nCars].brand, cars[nCars].regNumber, cars[nCars].owner.firstName, cars[nCars].owner.lastName, cars[nCars].owner.age);
         nCars++;
     }
     fclose(file);
