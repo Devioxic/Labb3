@@ -7,27 +7,38 @@ void createRegisterifNotExisting() {
     fclose(file);
 }
 
-struct car *readRegister(int *nCars) { //TODO free cars
+int readRegister(struct car cars[]) {
     FILE *file = fopen(FILENAME, "r");
 
+    int nCars = 0;
+
     if (file == NULL) {
+        printf("File not found\n");
+        printf("Trying to create file\n");
         createRegisterifNotExisting();
         file = fopen(FILENAME, "r");
+        if (file == NULL) {
+            printf("File could not be created\n");
+            exit(1);
+        }
+        return 0;
     }
 
-    struct car *cars = malloc(sizeof(struct car) * MAXFILELEN);
-    
-    *nCars = fread(cars, sizeof(struct car), MAXFILELEN, file);
-
+    while (fscanf(file, "%[^,],%[^,],%[^,], %[^,],%[^,],%d\n", cars[nCars].type, cars[nCars].brand, cars[nCars].regNumber, cars[nCars].owner.firstName, cars[nCars].owner.lastName, &cars[nCars].owner.age) != EOF) {
+        printf("%s,%s,%s, %s,%s,%d\n", cars[nCars].type, cars[nCars].brand, cars[nCars].regNumber, cars[nCars].owner.firstName, cars[nCars].owner.lastName, cars[nCars].owner.age);
+        nCars++;
+    }
     fclose(file);
 
-    return cars;
+    return nCars;
 }
 
-void writeRegister(struct car *cars, int nCars) {
-    FILE *file = fopen(FILENAME, "wb");
+void writeRegister(struct car cars[], int nCars) {
+    FILE *file = fopen(FILENAME, "w");
 
-    fwrite(cars, sizeof(struct car), nCars, file);
+    for (int i = 0; i < nCars; i++) {
+        fprintf(file, "%s,%s,%s, %s,%s,%d\n", cars[i].type, cars[i].brand, cars[i].regNumber, cars[i].owner.firstName, cars[i].owner.lastName, cars[i].owner.age);
+    }
 
     fclose(file);
 }

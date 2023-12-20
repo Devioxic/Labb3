@@ -6,87 +6,111 @@
 #include <string.h>
 #include "fil.h"
 
-void printCar(int index, struct car *cars)
-{
-    printf("Index: %d\n", index);
-    printf("%d. %s %s %s\n", index + 1, cars[index].type, cars[index].brand, cars[index].regNumber);
+void printCar(int index, struct car *cars) {
+    printf("Type: %s, Brand: %s, RegNumber: %s \n", cars[index].type, cars[index].brand, cars[index].regNumber);
 }
 
-void printCars(int nCars, struct car *cars)
-{
-    for (int i = 0; i < nCars; i++)
-    {
+void printAllCars(struct car *cars, int nCars) {
+    printf("Number of cars: %d\n", nCars);
+    if (nCars == 0) {
+        printf("No cars in register\n");
+        return;
+    }
+    for (int i = 0; i < nCars; i++) {
         printCar(i, cars);
     }
 }
 
-void addOwner(struct person *owner)
-{
-    printf("First name: \n");
-    fflush(stdout);
-    char firstName[MAXFIRSTNAMELEN+1];
-    fgets(firstName, (MAXFIRSTNAMELEN), stdin);
+void createNewOwner(struct person *owner) {
+    printf("First name:\n");
+    fflush(stdin);
+    char firstName[MAXFIRSTNAMELEN];
+    fgets(firstName, MAXFIRSTNAMELEN+1, stdin);
     strtok(firstName, "\n");
 
-    printf("Last name: \n");
-    fflush(stdout);
-    char lastName[MAXLASTNAMELEN+1];
-    fgets(lastName, (MAXLASTNAMELEN), stdin);
+    printf("Last name:\n");
+    fflush(stdin);
+    char lastName[MAXLASTNAMELEN];
+    fgets(lastName, MAXLASTNAMELEN+1, stdin);
     strtok(lastName, "\n");
 
-    printf("Age: \n");
-    fflush(stdout);
-    char ageBuf[STANDARDBUF];
-    fgets(ageBuf, (STANDARDBUF), stdin);
-    int age = atoi(ageBuf);
+    printf("Age:\n");
+    fflush(stdin);
+    char age[STANDARDBUF];
+    fgets(age, STANDARDBUF+1, stdin);
+    strtok(age, "\n");
 
-    owner->firstName = firstName;
-    owner->lastName = lastName;
-    owner->age = age;
+    strncpy(owner->firstName, firstName, (sizeof(owner->firstName)-1));
+    strncpy(owner->lastName, lastName, (sizeof(owner->lastName)-1));
+
+    owner->age = atoi(age);
 }
 
-void addVehicle(struct car *cars, int nCars)
-{
-    printf("Type: \n");
-    fflush(stdout);
-    char type[MAXTYPELEN+1];
-    fgets(type, (MAXTYPELEN), stdin);
+void addCar(struct car *cars, int *nCars) {
+    printf("Type:\n");
+    fflush(stdin);
+    char type[MAXTYPELEN];
+    fgets(type, MAXTYPELEN+1, stdin);
     strtok(type, "\n");
 
-    printf("Brand: \n");
-    fflush(stdout);
-    char brand[MAXBRANDLEN+1];
-    fgets(brand, (MAXBRANDLEN), stdin);
+    printf("Brand:\n");
+    fflush(stdin);
+    char brand[MAXBRANDLEN];
+    fgets(brand, MAXBRANDLEN+1, stdin);
     strtok(brand, "\n");
 
-    printf("Reg number: \n");
-    fflush(stdout);
-    char regNumber[MAXREGNUMBERLEN+1];
-    fgets(regNumber, (MAXREGNUMBERLEN), stdin);
+    printf("RegNumber:\n");
+    fflush(stdin);
+    char regNumber[MAXREGNUMBERLEN];
+    fgets(regNumber, MAXREGNUMBERLEN+1, stdin);
     strtok(regNumber, "\n");
 
-    struct person owner;
-    addOwner(&owner);
+    createNewOwner(&cars[*nCars].owner);
 
-    printf("Added vehicle: %s %s %s\n", type, brand, regNumber);
+    strncpy(cars[*nCars].type, type, (sizeof(cars[*nCars].type)-1));
+    strncpy(cars[*nCars].brand, brand, (sizeof(cars[*nCars].brand)-1));
+    strncpy(cars[*nCars].regNumber, regNumber, MAXREGNUMBERLEN);
 
-    cars[nCars] = (struct car){
-        .type = type,
-        .brand = brand,
-        .regNumber = regNumber,
-        .owner = owner};
-
-    while (getchar() != '\n');
-    fflush(stdout);
+    (*nCars)++;
 }
 
-int main()
-{
+void removeCar(struct car *cars, int *nCars) {
+    printf("Select index: \n");
+    fflush(stdin);
+    char indexBuf[STANDARDBUF];
+    fgets(indexBuf, (STANDARDBUF-1), stdin);
+    int index = atoi(indexBuf);
+    if (index < 0 || index >= *nCars)
+    {
+        printf("Invalid index\n");
+        return;
+    }
+    if (index > 0) {
+        index--;
+    }
+    for (int i = index; i < *nCars; i++) {
+        cars[i] = cars[i+1];
+    }
+    (*nCars)--;
+}
+
+void sortCars(struct car *cars, int nCars) {
+    for (int i = 0; i < nCars; i++) {
+        for (int j = 0; j < nCars; j++) {
+            if (strcmp(cars[i].brand, cars[j].brand) < 0) {
+                struct car temp = cars[i];
+                cars[i] = cars[j];
+                cars[j] = temp;
+            }
+        }
+    }
+}
+
+int main() {
     char indexBuf[STANDARDBUF];
     struct car cars[MAXFILELEN];
     int nCars = 0;
-
-    readRegister(&nCars);
+    nCars = readRegister(cars);
 
     while (true)
     {
@@ -108,18 +132,18 @@ int main()
                 printf("Register is full, remove a vehicle first\n");
                 break;
             }
-            addVehicle(cars, nCars);
+            addCar(cars, &nCars);
             nCars++;
             break;
         case 2:
-            printf("Remove a vehicle\n");
+            removeCar(cars, &nCars);
             break;
         case 3:
-            printf("Sort vehicles\n");
+            sortCars(cars, nCars);
             break;
         case 4:
             printf("Select index: \n");
-            fflush(stdout);
+            fflush(stdin);
             fgets(indexBuf, (STANDARDBUF-1), stdin);
             int index = atoi(indexBuf);
             if (index < 0 || index >= nCars)
@@ -133,10 +157,10 @@ int main()
             printCar(index, cars);
             break;
         case 5:
-            printCars(nCars, cars);
+            printAllCars(cars, nCars);
             break;
         case 0:
-            printf("Exit\n");
+            writeRegister(cars, nCars);
             return 0;
         default:
             printf("Invalid choice\n");
